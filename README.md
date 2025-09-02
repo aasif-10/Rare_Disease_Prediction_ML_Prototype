@@ -87,6 +87,8 @@ Accessibility: Can be deployed in clinics, hospitals, and homes globally.
 
 
 # Run Test Predictor
+```bash
 python scripts/test_hybrid.py
 
+```
 

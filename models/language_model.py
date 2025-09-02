@@ -46,26 +46,21 @@ class SimpleSymptomExtractor:
     def __init__(self):
         # Medical symptom keywords (what to look for in patient text)
         self.symptom_patterns = {
-            "bruising": ["bruise", "bruising", "bruises", "easy bruising", "purple marks"],
-            "fatigue": ["tired", "fatigue", "exhausted", "weak", "no energy", "always tired"],
-            "pallor": ["pale", "pallor", "white skin", "colorless", "washed out"],
-            "shortness_of_breath": ["short of breath", "can't breathe", "breathing hard", "breathless"],
-            "joint_pain": ["joint pain", "joints hurt", "arthritis", "stiff joints"],
-            "skin_hyperextensibility": ["stretchy skin", "elastic skin", "skin stretches"],
-            "tachycardia": ["fast heartbeat", "racing heart", "heart pounds", "palpitations"],
-            "orthostatic_intolerance": ["dizzy standing", "faint standing up", "dizzy when stand"],
-            "dizziness": ["dizzy", "lightheaded", "faint", "spinning"],
-            "chest_pain": ["chest pain", "heart pain", "chest hurts"],
-            "vision_problems": ["blurry vision", "can't see", "eye problems", "vision blurry"],
-            "hearing_loss": ["can't hear", "hearing problems", "deaf", "hard of hearing"],
-            "bone_pain": ["bone pain", "bones hurt", "deep pain"],
-            "easy_bleeding": ["bleed easily", "bleeding", "won't stop bleeding"],
-            "burning_pain": ["burning pain", "feels like fire", "burning sensation"],
-            "enlarged_spleen": ["swollen belly", "enlarged spleen", "big spleen"],
-            "yellowing": ["yellow skin", "jaundice", "yellow eyes"],
-            "angiokeratoma": ["red spots", "dark spots", "skin spots"],
-            "corneal_deposits": ["eye deposits", "corneal deposits", "eye problems"],
-            "tall_stature": ["very tall", "extremely tall", "abnormally tall"]
+            "bruising": ["bruise", "bruising", "bruises", "easy bruising", "purple marks", "black and blue"],
+            "fatigue": ["tired", "fatigue", "exhausted", "weak", "no energy", "always tired", "weakness"],
+            "pallor": ["pale", "pallor", "white skin", "colorless", "washed out", "pale skin"],
+            "shortness_of_breath": ["short of breath", "can't breathe", "breathing hard", "breathless", "out of breath"],
+            "joint_pain": ["joint pain", "joints hurt", "arthritis", "stiff joints", "aching joints"],
+            "skin_hyperextensibility": ["stretchy skin", "elastic skin", "skin stretches", "rubber skin"],
+            "tachycardia": ["fast heartbeat", "racing heart", "heart pounds", "palpitations", "rapid heartbeat"],
+            "orthostatic_intolerance": ["dizzy standing", "faint standing up", "dizzy when stand", "lightheaded standing"],
+            "dizziness": ["dizzy", "lightheaded", "faint", "spinning", "vertigo"],
+            "chest_pain": ["chest pain", "heart pain", "chest hurts", "chest ache"],
+            "vision_problems": ["blurry vision", "can't see", "eye problems", "vision blurry", "poor vision"],
+            "hearing_loss": ["can't hear", "hearing problems", "deaf", "hard of hearing", "hearing loss"],
+            "bone_pain": ["bone pain", "bones hurt", "deep pain", "aching bones"],
+            "easy_bleeding": ["bleed easily", "bleeding", "won't stop bleeding", "excessive bleeding"],
+            "burning_pain": ["burning pain", "feels like fire", "burning sensation", "burning feeling"]
         }
     
     def extract_symptoms(self, patient_text):
@@ -106,10 +101,15 @@ class SimpleSymptomExtractor:
             "tachycardia": "Rapid heartbeat",
             "orthostatic_intolerance": "Dizziness when standing",
             "dizziness": "Dizziness",
-            "chest_pain": "Chest pain"
+            "chest_pain": "Chest pain",
+            "vision_problems": "Vision problems",
+            "hearing_loss": "Hearing loss",
+            "bone_pain": "Bone pain",
+            "easy_bleeding": "Easy bleeding",
+            "burning_pain": "Burning pain"
         }
         
-        readable_symptoms = [symptom_names.get(s, s) for s in symptoms]
+        readable_symptoms = [symptom_names.get(s, s.replace('_', ' ').title()) for s in symptoms]
         
         if len(readable_symptoms) == 1:
             return f"Detected symptom: {readable_symptoms[0]}"

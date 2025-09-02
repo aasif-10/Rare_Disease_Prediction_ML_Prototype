@@ -3,103 +3,148 @@ import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
 import torchvision.transforms as transforms
+import numpy as np
 import json
 import os
 
 class MedicalVisionCNN(nn.Module):
     """
-    This is our AI 'doctor' that looks at medical images
-    Think of it as having layers of recognition:
-    - Layer 1: Spots basic shapes and colors
-    - Layer 2: Recognizes medical patterns  
-    - Layer 3: Makes final diagnosis decision
+    AI that analyzes medical images for visual symptoms of rare diseases
+    Detects: skin_hyperextensibility, pallor, joint_hypermobility, skin_spots, normal
     """
     
     def __init__(self):
         super(MedicalVisionCNN, self).__init__()
         
-        # Layer 1: Basic pattern recognition (like recognizing edges)
+        # Layer 1: Basic pattern recognition
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1)
         self.pool1 = nn.MaxPool2d(2, 2)
         
-        # Layer 2: Complex pattern recognition (like recognizing skin texture)
+        # Layer 2: Complex pattern recognition
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool2d(2, 2)
         
-        # Layer 3: Decision making (combines all patterns to make diagnosis)
-        self.fc1 = nn.Linear(32 * 56 * 56, 128)  # 32 patterns, 56x56 size each
-        self.fc2 = nn.Linear(128, 3)  # 3 possible outputs: pallor, normal, shallow_breathing
+        # Layer 3: Advanced feature extraction
+        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.pool3 = nn.MaxPool2d(2, 2)
         
-        self.dropout = nn.Dropout(0.5)  # Prevents overfitting (like not memorizing)
+        # Decision making layers
+        self.fc1 = nn.Linear(64 * 28 * 28, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 5)  # 5 visual symptoms
+        
+        self.dropout = nn.Dropout(0.5)
     
     def forward(self, x):
-        """
-        This is the 'thinking process' of our AI doctor
-        x = the input image
-        """
-        # Step 1: Look for basic patterns
+        # Feature extraction
         x = self.pool1(F.relu(self.conv1(x)))
-        
-        # Step 2: Look for complex patterns  
         x = self.pool2(F.relu(self.conv2(x)))
+        x = self.pool3(F.relu(self.conv3(x)))
         
-        # Step 3: Flatten the image data for decision making
-        x = x.view(-1, 32 * 56 * 56)
+        # Flatten for classification
+        x = x.view(-1, 64 * 28 * 28)
         
-        # Step 4: Make intermediate decision
+        # Classification layers
         x = F.relu(self.fc1(x))
         x = self.dropout(x)
-        
-        # Step 5: Final diagnosis decision
-        x = self.fc2(x)
+        x = F.relu(self.fc2(x))
+        x = self.dropout(x)
+        x = self.fc3(x)
         
         return x
 
 class MedicalImageProcessor:
     """
-    This prepares images for our AI to analyze
-    Like cleaning glasses before looking through them
+    Processes images for rare disease symptom detection
     """
     
     def __init__(self):
-        # These are the steps to prepare any image for our AI
         self.transform = transforms.Compose([
-            transforms.Resize((224, 224)),          # Make all images same size
-            transforms.ToTensor(),                   # Convert to numbers AI can understand
-            transforms.Normalize(                    # Adjust colors to standard range
-                mean=[0.485, 0.456, 0.406],        # Standard values for medical images
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
                 std=[0.229, 0.224, 0.225]
             )
         ])
+        
+        # Visual symptoms our AI can detect
+        self.visual_symptoms = [
+            "normal",
+            "skin_hyperextensibility",  # EDS: stretchy skin
+            "pallor",                   # General: pale appearance
+            "joint_hypermobility",      # EDS/Marfan: flexible joints
+            "skin_spots"                # Fabry: red/dark spots
+        ]
     
     def process_image(self, image_path):
+        """Process image for AI analysis"""
+        try:
+            image = Image.open(image_path).convert('RGB')
+            processed_image = self.transform(image)
+            return processed_image.unsqueeze(0)
+        except Exception as e:
+            print(f"Error processing image: {e}")
+            return None
+    
+    def analyze_image_with_mock_ai(self, image_path):
         """
-        Takes an image file and prepares it for AI analysis
+        Mock AI analysis for demonstration
+        In real implementation, this would use the trained model
         """
-        # Load the image
-        image = Image.open(image_path).convert('RGB')
+        try:
+            image = Image.open(image_path).convert('RGB')
+            image_array = np.array(image)
+            
+            # Mock analysis based on image properties
+            # This simulates what a real AI would do
+            avg_brightness = np.mean(image_array)
+            color_variance = np.var(image_array)
+            
+            detected_symptoms = []
+            
+            # Simple heuristics for demo (real AI would be much more sophisticated)
+            if avg_brightness < 100:
+                detected_symptoms.append("pallor")
+            
+            if color_variance > 2000:
+                detected_symptoms.append("skin_spots")
+            
+            # Random chance for other symptoms (for demo)
+            if np.random.random() > 0.7:
+                detected_symptoms.append("skin_hyperextensibility")
+            
+            if not detected_symptoms:
+                detected_symptoms.append("normal")
+            
+            return detected_symptoms
         
-        # Apply all the preparation steps
-        processed_image = self.transform(image)
-        
-        # Add batch dimension (AI expects multiple images, even if we have 1)
-        processed_image = processed_image.unsqueeze(0)
-        
-        return processed_image
+        except Exception as e:
+            print(f"Error analyzing image: {e}")
+            return ["normal"]
+
 def test_vision_model():
-    print("Testing Vision Model...")
-    print("Creating AI that can analyze medical images...")
+    """Test the vision model"""
+    print("Testing Vision Model for Rare Disease Detection...")
     
     model = MedicalVisionCNN()
     processor = MedicalImageProcessor()
     
     print(f"✅ Vision model created successfully!")
     print(f"Model has {sum(p.numel() for p in model.parameters())} parameters")
-    print("This AI can detect: pallor, normal skin, shallow breathing")
+    print(f"Can detect visual symptoms: {processor.visual_symptoms}")
     
-    return model
+    # Test with dummy data
+    dummy_input = torch.randn(1, 3, 224, 224)
+    output = model(dummy_input)
+    probabilities = torch.softmax(output, dim=1)
+    
+    print("\n--- Sample Analysis (Dummy Data) ---")
+    for i, symptom in enumerate(processor.visual_symptoms):
+        prob = probabilities[0][i].item()
+        print(f"{symptom}: {prob*100:.1f}%")
+    
+    return model, processor
 
 if __name__ == "__main__":
     test_vision_model()
-
-

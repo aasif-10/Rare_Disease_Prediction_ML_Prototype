@@ -1,6 +1,6 @@
 # Hybrid Disease Predictor
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python) ![License: MIT](https://img.shields.io/badge/License-MIT-green) ![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python) 
 
 A web-based **AI + Rule-Based hybrid system** to predict diseases instantly from symptoms (text or visual). The platform generates actionable reports with probable diagnoses, confidence levels, and suggested doctor guidance, helping reduce delays in treatment.
 
@@ -87,3 +87,4 @@ Accessibility: Can be deployed in clinics, hospitals, and homes globally.
 
 # Run Test Predictor
 python scripts/test_hybrid.py
+

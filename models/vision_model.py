@@ -86,20 +86,20 @@ class MedicalImageProcessor:
         processed_image = processed_image.unsqueeze(0)
         
         return processed_image
-
-def create_vision_model():
-    """
-    Creates a new, untrained vision model
-    Like creating a medical student who hasn't studied yet
-    """
+def test_vision_model():
+    print("Testing Vision Model...")
+    print("Creating AI that can analyze medical images...")
+    
     model = MedicalVisionCNN()
-    print("Vision model created!")
-    print(f"Model has {sum(p.numel() for p in model.parameters())} parameters to learn")
+    processor = MedicalImageProcessor()
+    
+    print(f"✅ Vision model created successfully!")
+    print(f"Model has {sum(p.numel() for p in model.parameters())} parameters")
+    print("This AI can detect: pallor, normal skin, shallow breathing")
+    
     return model
 
 if __name__ == "__main__":
-    # Test creating the model
-    model = create_vision_model()
-    processor = MedicalImageProcessor()
-    
-    print("Vision model ready for training!")
+    test_vision_model()
+
+

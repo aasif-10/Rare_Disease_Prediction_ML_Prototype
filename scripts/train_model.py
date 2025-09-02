@@ -1,36 +1,39 @@
-# train_model.py
+# train_model_enhanced.py
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
-import joblib  # to save the trained model
+import joblib
 
-# 1️⃣ Load dataset
-data = pd.read_csv('data/rare_diseases_dataset_train.csv')
-
+# 1️⃣ Load the enhanced dataset
+data = pd.read_csv('rare_diseases_dataset_enhanced.csv')
 
 # 2️⃣ Split features and labels
-X = data.drop('disease', axis=1)  # all symptom columns
-y = data['disease']               # disease column
-import joblib
-# Save feature names used for training so inference uses the exact same order
+X = data.drop('disease', axis=1)  # all symptom + category columns
+y = data['disease']               # target column
+
+# Save feature names for inference
 feature_names = X.columns.tolist()
-joblib.dump(feature_names, 'models/feature_names.pkl')
+joblib.dump(feature_names, 'models/feature_names_enhanced.pkl')
 print("Saved feature names (count={}):".format(len(feature_names)))
 
-# 3️⃣ Encode disease labels to numbers
+# 3️⃣ Encode labels
 le = LabelEncoder()
 y_encoded = le.fit_transform(y)
 
 # 4️⃣ Split into training and testing sets
-# Removed 'stratify=y_encoded' because some classes have only 1 sample
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y_encoded, test_size=0.2, random_state=42
+    X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
 )
 
-# 5️⃣ Train a Random Forest Classifier
-clf = RandomForestClassifier(n_estimators=100, random_state=42)
+# 5️⃣ Train Random Forest Classifier with more estimators
+clf = RandomForestClassifier(
+    n_estimators=300,   # increase trees from 100 -> 300
+    max_depth=None,     # let trees grow fully
+    random_state=42,
+    n_jobs=-1           # use all CPU cores
+)
 clf.fit(X_train, y_train)
 
 # 6️⃣ Evaluate the model
@@ -41,7 +44,7 @@ print("\nClassification Report:\n", classification_report(
 ))
 
 # 7️⃣ Save the trained model and label encoder
-joblib.dump(clf, 'models/trained_disease_model.pkl')
-joblib.dump(le, 'models/label_encoder.pkl')
+joblib.dump(clf, 'models/trained_disease_model_enhanced.pkl')
+joblib.dump(le, 'models/label_encoder_enhanced.pkl')
 
-print("\n✅ Model trained and saved successfully!")
+print("\n✅ Enhanced model trained and saved successfully!")

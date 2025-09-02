@@ -51,6 +51,7 @@ python scripts/test_hybrid.py
 ```
 
 ## Usage
+```bash
 from hybrid_predictor import hybrid_predict
 
 # Example text symptoms
@@ -63,7 +64,7 @@ print("Top 5 predictions:")
 for pred in result["predictions"][:5]:
     print(pred)
 
-
+```
 ## Project Structure
 Hybrid-Disease-Predictor/
 │
@@ -87,4 +88,5 @@ Accessibility: Can be deployed in clinics, hospitals, and homes globally.
 
 # Run Test Predictor
 python scripts/test_hybrid.py
+
 

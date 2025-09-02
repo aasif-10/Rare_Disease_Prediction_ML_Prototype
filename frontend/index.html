@@ -1,567 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Diagnostic Platform</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(45deg, #2196F3, #21CBF3);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            padding: 30px;
-        }
-
-        .input-section,
-        .results-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 25px;
-        }
-
-        .input-section h2,
-        .results-section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            min-height: 120px;
-            resize: vertical;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group textarea:focus {
-            border-color: #2196F3;
-            outline: none;
-        }
-
-        .file-upload {
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .file-upload:hover {
-            border-color: #2196F3;
-            background: #f0f8ff;
-        }
-
-        .file-upload.drag-over {
-            border-color: #2196F3;
-            background: #e3f2fd;
-        }
-
-        .file-upload input[type="file"] {
-            display: none;
-        }
-
-        .file-upload-text {
-            color: #666;
-            font-size: 16px;
-        }
-
-        .preview-image {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .btn {
-            background: linear-gradient(45deg, #2196F3, #21CBF3);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            font-weight: bold;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(33, 150, 243, 0.3);
-        }
-
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading.show {
-            display: block;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2196F3;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .debug-info {
-            background: #f5f5f5;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 10px 0;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .symptom-list {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            min-height: 60px;
-        }
-
-        .symptom-item {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 5px 12px;
-            border-radius: 20px;
-            display: inline-block;
-            margin: 5px 5px 5px 0;
-            font-size: 14px;
-        }
-
-        .prediction-item {
-            background: white;
-            border-left: 4px solid #2196F3;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .prediction-item h3 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .prediction-confidence {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2196F3;
-        }
-
-        .prediction-details {
-            color: #666;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #c62828;
-            display: none;
-        }
-
-        .success-message {
-            background: #e8f5e8;
-            color: #2e7d2e;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #2e7d2e;
-            display: none;
-        }
-
-        .no-results {
-            color: #666;
-            font-style: italic;
-            text-align: center;
-            padding: 20px;
-        }
-
-        @media(max-width:768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .header h1 {
-                font-size: 2em;
-            }
-        }
-    </style>
+    <title>AI Diagnosis Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle theme">
+            <i class="fas fa-sun light-icon"></i>
+            <i class="fas fa-moon dark-icon"></i>
+        </button>
+    </div>
+
+    <!-- Main Container -->
     <div class="container">
-        <div class="header">
-            <h1>Rare Disease AI Diagnostic Tool</h1>
-            <p>Advanced AI-powered analysis for rare disease detection</p>
-        </div>
-        <div class="main-content">
-            <div class="input-section">
-                <h2>Patient Information</h2>
-
-                <div id="errorMessage" class="error-message"></div>
-                <div id="successMessage" class="success-message"></div>
-
-                <form id="analysisForm">
-                    <div class="form-group">
-                        <label for="patientDescription">Patient Description:</label>
-                        <textarea id="patientDescription" name="patientDescription"
-                            placeholder="Describe symptoms... Example: 'I bruise easily and am always tired. My joints are very flexible.'"
-                            required></textarea>
+        <!-- Header Section -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-brain"></i>
                     </div>
-                    <div class="form-group">
-                        <label>Medical Image (Optional):</label>
-                        <div class="file-upload" id="fileUpload">
-                            <input type="file" id="imageFile" name="image" accept="image/*">
-                            <div class="file-upload-text">
-                                <span>Click to upload or drag image here</span><br><small>Supported: JPG, PNG, GIF (Max
-                                    16MB)</small>
-                            </div>
-                            <img id="previewImage" class="preview-image" style="display:none;">
-                        </div>
+                    <div class="logo-text">
+                        <h1>AI Diagnosis Platform</h1>
+                        <p>Advanced AI-powered analysis for AI-based diagnosis</p>
                     </div>
-                    <button type="submit" class="btn" id="analyzeBtn">Analyze Patient</button>
-                </form>
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <p>AI is analyzing patient data...</p>
+                </div>
+                <div class="header-actions">
+                    <nav class="nav-menu">
+                        <a href="index.html" class="nav-link active">
+                            <i class="fas fa-home"></i>
+                            Patient Portal
+                        </a>
+                        <a href="doctor_login.html" class="nav-link">
+                            <i class="fas fa-user-md"></i>
+                            Doctor Login
+                        </a>
+                        <a href="patient_prescription_fixed.html" class="nav-link">
+                            <i class="fas fa-prescription"></i>
+                            View Prescription
+                        </a>
+                    </nav>
+                    <button class="btn-secondary" id="helpBtn">
+                        <i class="fas fa-question-circle"></i>
+                        Help
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-user-md"></i> Submit Your Case</h2>
+                    <p>Describe your symptoms and upload medical images for AI analysis</p>
                 </div>
 
-                <!-- Debug info -->
-                <details style="margin-top: 20px;">
-                    <summary>Debug Information</summary>
+                <!-- Messages -->
+                <div id="errorMessage" class="message error-message" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span></span>
+                </div>
+                <div id="successMessage" class="message success-message" style="display: none;">
+                    <i class="fas fa-check-circle"></i>
+                    <span></span>
+                </div>
+
+                <!-- Analysis Form -->
+                <form id="analysisForm" class="analysis-form">
+                    <div class="form-group">
+                        <label for="patientDescription">
+                            <i class="fas fa-notes-medical"></i>
+                            Describe Your Symptoms
+                        </label>
+                        <textarea 
+                            id="patientDescription" 
+                            name="patientDescription"
+                            placeholder="Describe your symptoms in detail... Example: 'I bruise easily and am always tired. My joints are very flexible.'"
+                            required
+                        ></textarea>
+                        <div class="char-counter">
+                            <span id="charCount">0</span> characters
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-image"></i>
+                            Medical Image (Optional)
+                        </label>
+                        <div class="file-upload-container">
+                            <div class="file-upload" id="fileUpload">
+                                <input type="file" id="imageFile" name="image" accept="image/*">
+                                <div class="file-upload-content">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div class="upload-text">
+                                        <span class="primary-text">Click to upload or drag image here</span>
+                                        <span class="secondary-text">Supported: JPG, PNG, GIF (Max 16MB)</span>
+                                    </div>
+                                </div>
+                                <img id="previewImage" class="preview-image" style="display: none;">
+                            </div>
+                            <div class="file-info" id="fileInfo" style="display: none;">
+                                <span class="file-name"></span>
+                                <button type="button" class="remove-file" id="removeFile">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="analyzeBtn">
+                        <i class="fas fa-paper-plane"></i>
+                        <span class="btn-text">Submit Case</span>
+                        <span class="btn-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Submitting...
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Loading State -->
+                <div class="loading-container" id="loading" style="display: none;">
+                    <div class="loading-content">
+                        <div class="loading-spinner">
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-ring"></div>
+                        </div>
+                        <p>Submitting your case...</p>
+                        <div class="loading-steps">
+                            <div class="step active">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Processing symptoms</span>
+                            </div>
+                            <div class="step">
+                                <i class="fas fa-circle"></i>
+                                <span>Analyzing image</span>
+                            </div>
+                            <div class="step">
+                                <i class="fas fa-circle"></i>
+                                <span>Generating AI analysis</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Info -->
+                <div class="success-info" id="successInfo" style="display: none;">
+                    <div class="success-card">
+                        <div class="success-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3>Case Submitted Successfully!</h3>
+                        <p>Your case has been submitted and is being reviewed by our AI system. A doctor will review the results and provide you with a prescription.</p>
+                        <div class="patient-id-display">
+                            <strong>Your Patient ID:</strong>
+                            <span id="patientIdDisplay" class="patient-id"></span>
+                        </div>
+                        <div class="next-steps">
+                            <h4>Next Steps:</h4>
+                            <ol>
+                                <li>Save your Patient ID - you'll need it to view your prescription</li>
+                                <li>Check back later using the "View Prescription" link above</li>
+                                <li>A doctor will review your case and provide medical guidance</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Debug Section -->
+                <details class="debug-section">
+                    <summary>
+                        <i class="fas fa-bug"></i>
+                        Debug Information
+                    </summary>
                     <div id="debugInfo" class="debug-info">Debug info will appear here...</div>
                 </details>
+            </section>
+
+            <!-- Information Section -->
+            <section class="info-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-info-circle"></i> How It Works</h2>
+                    <p>Understanding the AI diagnosis process</p>
+                </div>
+
+                <div class="info-cards">
+                    <div class="info-card">
+                        <div class="card-icon">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <h3>1. Submit Your Case</h3>
+                        <p>Describe your symptoms and optionally upload medical images. Our AI will analyze the information.</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>2. AI Analysis</h3>
+                        <p>Advanced AI models process your symptoms and images to identify potential conditions and patterns.</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <h3>3. Doctor Review</h3>
+                        <p>Qualified doctors review the AI analysis and provide personalized medical prescriptions and guidance.</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon">
+                            <i class="fas fa-prescription"></i>
+                        </div>
+                        <h3>4. Get Prescription</h3>
+                        <p>Use your Patient ID to view your prescription and medical recommendations when they're ready.</p>
+                    </div>
+                </div>
+
+                <div class="important-notice">
+                    <div class="notice-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="notice-content">
+                        <h4>Important Notice</h4>
+                        <p>This AI system is designed to assist healthcare professionals and should not replace professional medical advice. Always consult with a qualified healthcare provider for medical decisions.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> Help & Instructions</h3>
+                <button class="modal-close" id="closeHelpModal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="results-section">
-                <h2>Analysis Results</h2>
-                <div id="results">
-                    <div>
-                        <h3>Text Symptoms:</h3>
-                        <div class="symptom-list" id="textSymptoms">
-                            <div class="no-results">Enter patient description to see detected symptoms</div>
-                        </div>
-                    </div>
-                    <div>
-                        <h3>Visual Symptoms:</h3>
-                        <div class="symptom-list" id="visualSymptoms">
-                            <div class="no-results">Upload image to see visual symptoms</div>
-                        </div>
-                    </div>
-                    <div>
-                        <h3>Disease Predictions:</h3>
-                        <div id="predictions">
-                            <div class="no-results">Predictions will appear here after analysis</div>
-                        </div>
-                    </div>
-                    <div>
-                        <h3>Explanation:</h3>
-                        <div class="symptom-list" id="explanation">
-                            <div class="no-results">AI explanation will appear here</div>
-                        </div>
-                    </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h4>How to submit your case:</h4>
+                    <ol>
+                        <li>Describe your symptoms in detail in the text area</li>
+                        <li>Optionally upload a medical image for visual analysis</li>
+                        <li>Click "Submit Case" to send your information</li>
+                        <li>Save your Patient ID - you'll need it later</li>
+                        <li>Check back using "View Prescription" to see your results</li>
+                    </ol>
+                </div>
+                <div class="help-section">
+                    <h4>Tips for better results:</h4>
+                    <ul>
+                        <li>Be specific about symptoms and their severity</li>
+                        <li>Include relevant medical history if available</li>
+                        <li>Use clear, high-quality images when uploading</li>
+                        <li>Provide context about when symptoms started</li>
+                        <li>Keep your Patient ID safe for future reference</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4>What happens next:</h4>
+                    <ul>
+                        <li>AI analyzes your symptoms and images</li>
+                        <li>Doctors review the AI analysis</li>
+                        <li>You receive a prescription and medical guidance</li>
+                        <li>Use your Patient ID to access your results</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        const form = document.getElementById('analysisForm');
-        const fileInput = document.getElementById('imageFile');
-        const fileUpload = document.getElementById('fileUpload');
-        const previewImage = document.getElementById('previewImage');
-        const loading = document.getElementById('loading');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const debugInfo = document.getElementById('debugInfo');
-        let currentFile = null;
-        const API_BASE = 'http://localhost:5000/api';
-
-        function addDebugInfo(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            debugInfo.innerHTML += `[${timestamp}] ${message}\n`;
-            debugInfo.scrollTop = debugInfo.scrollHeight;
-        }
-
-        // File upload preview
-        fileUpload.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', e => {
-            if (e.target.files.length > 0) {
-                currentFile = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    previewImage.src = ev.target.result;
-                    previewImage.style.display = 'block';
-
-                    const uploadText = fileUpload.querySelector('.file-upload-text span');
-                    uploadText.textContent = `${currentFile.name} selected`;
-                };
-                reader.readAsDataURL(currentFile);
-                addDebugInfo(`File selected: ${currentFile.name}`);
-            }
-        });
-
-        form.addEventListener('submit', async e => {
-            e.preventDefault();
-            await analyzePatient();
-        });
-
-        function showError(message) {
-            document.getElementById('errorMessage').textContent = message;
-            document.getElementById('errorMessage').style.display = 'block';
-            document.getElementById('successMessage').style.display = 'none';
-            addDebugInfo(`ERROR: ${message}`);
-        }
-
-        function showSuccess(message) {
-            document.getElementById('successMessage').textContent = message;
-            document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('errorMessage').style.display = 'none';
-            addDebugInfo(`SUCCESS: ${message}`);
-        }
-
-        function hideMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
-        }
-
-        async function analyzePatient() {
-            const patientDescription = document.getElementById('patientDescription').value.trim();
-
-            if (!patientDescription && !currentFile) {
-                showError('Please provide either a patient description or upload an image.');
-                return;
-            }
-
-            addDebugInfo('Starting analysis...');
-            loading.style.display = 'block';
-            analyzeBtn.disabled = true;
-            analyzeBtn.textContent = 'Analyzing...';
-            hideMessages();
-
-            const formData = new FormData();
-            formData.append('patient_description', patientDescription);
-            if (currentFile) formData.append('image', currentFile);
-
-            addDebugInfo(`Sending request to: ${API_BASE}/complete-analysis`);
-            addDebugInfo(`Patient description: ${patientDescription}`);
-            addDebugInfo(`Image attached: ${currentFile ? 'Yes' : 'No'}`);
-
-            try {
-                const res = await fetch(`${API_BASE}/complete-analysis`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                addDebugInfo(`Response status: ${res.status}`);
-
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                }
-
-                const data = await res.json();
-                addDebugInfo(`Response received: ${JSON.stringify(data, null, 2)}`);
-
-                if (data.success) {
-                    displayResults(data);
-                    showSuccess('Analysis completed successfully!');
-                } else {
-                    showError(data.error || 'Analysis failed');
-                }
-
-            } catch (err) {
-                addDebugInfo(`Request failed: ${err.message}`);
-                showError(`Backend error: ${err.message}. Make sure server is running on port 5000.`);
-            } finally {
-                loading.style.display = 'none';
-                analyzeBtn.disabled = false;
-                analyzeBtn.textContent = 'Analyze Patient';
-            }
-        }
-
-        function displayResults(data) {
-            addDebugInfo('Displaying results...');
-
-            // Display text symptoms
-            const textSymptomsDiv = document.getElementById('textSymptoms');
-            if (data.text_symptoms && data.text_symptoms.length > 0) {
-                textSymptomsDiv.innerHTML = data.text_symptoms
-                    .map(s => `<span class="symptom-item">${s}</span>`)
-                    .join('');
-                addDebugInfo(`Text symptoms: ${data.text_symptoms.join(', ')}`);
-            } else {
-                textSymptomsDiv.innerHTML = '<div class="no-results">No text symptoms detected</div>';
-                addDebugInfo('No text symptoms detected');
-            }
-
-            // Display visual symptoms
-            const visualSymptomsDiv = document.getElementById('visualSymptoms');
-            if (data.visual_symptoms && data.visual_symptoms.length > 0) {
-                visualSymptomsDiv.innerHTML = data.visual_symptoms
-                    .map(s => `<span class="symptom-item">${s}</span>`)
-                    .join('');
-                addDebugInfo(`Visual symptoms: ${data.visual_symptoms.join(', ')}`);
-            } else {
-                visualSymptomsDiv.innerHTML = '<div class="no-results">No visual symptoms detected</div>';
-                addDebugInfo('No visual symptoms detected');
-            }
-
-            // Display predictions
-            const predictionsDiv = document.getElementById('predictions');
-            if (data.predictions && data.predictions.length > 0) {
-                addDebugInfo(`Processing ${data.predictions.length} predictions`);
-
-                predictionsDiv.innerHTML = data.predictions
-                    .map((p, i) => {
-                        // Handle both decimal and percentage formats
-                        let confidenceDisplay;
-                        if (typeof p.confidence === 'string') {
-                            confidenceDisplay = p.confidence;
-                        } else if (typeof p.confidence === 'number') {
-                            // If it's already a percentage (>1), display as is
-                            // If it's a decimal (<=1), convert to percentage
-                            confidenceDisplay = p.confidence > 1 ?
-                                `${p.confidence.toFixed(1)}%` :
-                                `${(p.confidence * 100).toFixed(1)}%`;
-                        } else {
-                            confidenceDisplay = 'N/A';
-                        }
-
-                        return `
-                            <div class="prediction-item">
-                                <h3>${i + 1}. ${p.disease}</h3>
-                                <div class="prediction-confidence">Confidence: ${confidenceDisplay}</div>
-                                <div class="prediction-details">
-                                    ${p.matching_symptoms || 'N/A'}/${p.total_disease_symptoms || 'N/A'} symptoms match
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-
-                addDebugInfo(`Predictions displayed: ${data.predictions.map(p => `${p.disease} (${p.confidence})`).join(', ')}`);
-            } else {
-                predictionsDiv.innerHTML = '<div class="no-results">No predictions available</div>';
-                addDebugInfo('No predictions available');
-            }
-
-            // Display explanation
-            const explanationDiv = document.getElementById('explanation');
-            if (data.explanation && data.explanation.explanation) {
-                explanationDiv.innerHTML = `<p>${data.explanation.explanation}</p>`;
-                addDebugInfo(`Explanation: ${data.explanation.explanation}`);
-            } else {
-                explanationDiv.innerHTML = '<div class="no-results">No explanation available</div>';
-                addDebugInfo('No explanation available');
-            }
-        }
-
-        // Test backend connection on page load
-        window.addEventListener('load', async () => {
-            addDebugInfo('Page loaded, testing backend connection...');
-            try {
-                const response = await fetch(`${API_BASE}/health`);
-                const data = await response.json();
-
-                if (data.status === 'healthy') {
-                    addDebugInfo('Backend connection successful');
-                    showSuccess('Backend connected successfully!');
-                    setTimeout(hideMessages, 3000);
-                } else {
-                    addDebugInfo(`Backend responded but not healthy: ${JSON.stringify(data)}`);
-                }
-            } catch (error) {
-                addDebugInfo(`Backend connection failed: ${error.message}`);
-                showError('Backend server not connected. Please start the backend on port 5000.');
-            }
-        });
-    </script>
+    <!-- Scripts -->
+    <script src="script.js"></script>
 </body>
-
 </html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard - AI Diagnosis Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle theme">
+            <i class="fas fa-sun light-icon"></i>
+            <i class="fas fa-moon dark-icon"></i>
+        </button>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="welcome-section">
+                    <h1>Welcome, <span id="doctorName">Doctor</span>!</h1>
+                    <p>Review patient cases and manage prescriptions</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                    <button class="btn-secondary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-number" id="totalPatients">0</div>
+                <div class="stat-label">Total Patients</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-prescription"></i>
+                </div>
+                <div class="stat-number" id="prescriptionsGiven">0</div>
+                <div class="stat-label">Prescriptions Given</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-number" id="pendingCases">0</div>
+                <div class="stat-label">Pending Cases</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Patients Section -->
+            <section class="patients-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-users"></i>
+                        Patient Cases
+                    </h2>
+                    <button class="refresh-btn" onclick="refreshPatients()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+
+                <div id="patientsList">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Loading patient cases...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Model Evaluation -->
+                <div class="model-evaluation">
+                    <div class="evaluation-header">
+                        <h3>
+                            <i class="fas fa-chart-bar"></i>
+                            Model Evaluation
+                        </h3>
+                        <button class="toggle-btn" id="toggleEvaluation" onclick="toggleEvaluation()">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="evaluation-content" id="evaluationContent">
+                        <div class="confusion-matrix" id="confusionMatrix">
+                            <div class="loading-spinner">
+                                <div class="spinner"></div>
+                                <p>Loading confusion matrix...</p>
+                            </div>
+                        </div>
+                        
+                        <div id="metricsTable">
+                            <div class="loading-spinner">
+                                <div class="spinner"></div>
+                                <p>Loading metrics...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('doctorToken');
+            if (!token) {
+                window.location.href = 'doctor_login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Theme Management
+        class ThemeManager {
+            constructor() {
+                this.currentTheme = localStorage.getItem('theme') || 'light';
+                this.init();
+            }
+
+            init() {
+                this.applyTheme();
+                this.setupEventListeners();
+            }
+
+            applyTheme() {
+                document.documentElement.setAttribute('data-theme', this.currentTheme);
+                localStorage.setItem('theme', this.currentTheme);
+                
+                const themeToggle = document.getElementById('themeToggle');
+                if (themeToggle) {
+                    const lightIcon = themeToggle.querySelector('.light-icon');
+                    const darkIcon = themeToggle.querySelector('.dark-icon');
+                    
+                    if (this.currentTheme === 'dark') {
+                        lightIcon.style.display = 'none';
+                        darkIcon.style.display = 'block';
+                    } else {
+                        lightIcon.style.display = 'block';
+                        darkIcon.style.display = 'none';
+                    }
+                }
+            }
+
+            toggleTheme() {
+                this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+                this.applyTheme();
+            }
+
+            setupEventListeners() {
+                const themeToggle = document.getElementById('themeToggle');
+                if (themeToggle) {
+                    themeToggle.addEventListener('click', () => this.toggleTheme());
+                }
+            }
+        }
+
+        // Dashboard Manager
+        class DashboardManager {
+            constructor() {
+                this.token = localStorage.getItem('doctorToken');
+                this.username = localStorage.getItem('doctorUsername');
+                this.init();
+            }
+
+            init() {
+                if (!checkAuth()) return;
+                
+                this.setDoctorName();
+                this.loadPatients();
+                this.loadModelEvaluation();
+            }
+
+            setDoctorName() {
+                const doctorNameElement = document.getElementById('doctorName');
+                if (doctorNameElement && this.username) {
+                    doctorNameElement.textContent = this.username;
+                }
+            }
+
+            async loadPatients() {
+                try {
+                    const response = await fetch('http://localhost:5000/api/doctor/patients', {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.displayPatients(data.patients);
+                        this.updateStats(data.patients);
+                    } else {
+                        throw new Error(data.error || 'Failed to load patients');
+                    }
+
+                } catch (error) {
+                    console.error('Error loading patients:', error);
+                    this.showError('Failed to load patient cases');
+                }
+            }
+
+            displayPatients(patients) {
+                const patientsList = document.getElementById('patientsList');
+                
+                if (!patients || patients.length === 0) {
+                    patientsList.innerHTML = `
+                        <div class="no-patients">
+                            <i class="fas fa-users"></i>
+                            <p>No patient cases found</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                patientsList.innerHTML = patients.map(patient => this.createPatientCard(patient)).join('');
+            }
+
+            createPatientCard(patient) {
+                const hasPrescription = patient.prescription && patient.prescription.trim() !== '';
+                
+                return `
+                    <div class="patient-card">
+                        <div class="patient-header">
+                            <div class="patient-info">
+                                <h3>Patient Case #${patient.id}</h3>
+                                <span class="patient-id">ID: ${patient.patient_id}</span>
+                            </div>
+                            <small style="color: var(--text-muted);">${new Date(patient.created_at).toLocaleDateString()}</small>
+                        </div>
+                        
+                        <div class="patient-description">
+                            <strong>Patient Description:</strong><br>
+                            ${patient.description}
+                        </div>
+                        
+                        <div class="ai-results">
+                            <h4><i class="fas fa-brain"></i> AI Analysis Results</h4>
+                            
+                            <div class="symptoms-list">
+                                <strong>Text Symptoms:</strong><br>
+                                ${patient.text_symptoms.length > 0 ? 
+                                    patient.text_symptoms.map(s => `<span class="symptom-tag">${s}</span>`).join('') : 
+                                    '<span style="color: var(--text-muted);">None detected</span>'
+                                }
+                            </div>
+                            
+                            <div class="symptoms-list">
+                                <strong>Visual Symptoms:</strong><br>
+                                ${patient.visual_symptoms.length > 0 ? 
+                                    patient.visual_symptoms.map(s => `<span class="symptom-tag">${s}</span>`).join('') : 
+                                    '<span style="color: var(--text-muted);">None detected</span>'
+                                }
+                            </div>
+                            
+                            <div class="predictions-list">
+                                <strong>Disease Predictions:</strong><br>
+                                ${patient.ai_predictions.map(p => `
+                                    <div class="prediction-item">
+                                        <span class="prediction-disease">${p.disease}</span>
+                                        <span class="prediction-confidence">${(p.confidence * 100).toFixed(1)}%</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                                <strong>AI Explanation:</strong> ${patient.ai_explanation}
+                            </div>
+                        </div>
+                        
+                        <div class="prescription-section">
+                            <h4><i class="fas fa-prescription"></i> Prescription</h4>
+                            
+                            ${hasPrescription ? `
+                                <div class="prescription-text">${patient.prescription}</div>
+                                <button class="btn-secondary-small" onclick="editPrescription(${patient.id})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            ` : `
+                                <div style="color: var(--text-muted); margin-bottom: 16px;">No prescription yet</div>
+                                <button class="btn-primary-small" onclick="addPrescription(${patient.id})">
+                                    <i class="fas fa-plus"></i> Add Prescription
+                                </button>
+                            `}
+                            
+                            <div class="prescription-form" id="prescriptionForm${patient.id}">
+                                <textarea 
+                                    class="prescription-textarea" 
+                                    id="prescriptionText${patient.id}" 
+                                    placeholder="Enter prescription details..."
+                                >${hasPrescription ? patient.prescription : ''}</textarea>
+                                <div class="prescription-actions">
+                                    <button class="btn-primary-small" onclick="savePrescription(${patient.id})">
+                                        <i class="fas fa-save"></i> Save
+                                    </button>
+                                    <button class="btn-secondary-small" onclick="cancelPrescription(${patient.id})">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            updateStats(patients) {
+                const totalPatients = patients.length;
+                const prescriptionsGiven = patients.filter(p => p.prescription && p.prescription.trim() !== '').length;
+                const pendingCases = totalPatients - prescriptionsGiven;
+                
+                document.getElementById('totalPatients').textContent = totalPatients;
+                document.getElementById('prescriptionsGiven').textContent = prescriptionsGiven;
+                document.getElementById('pendingCases').textContent = pendingCases;
+            }
+
+            async loadModelEvaluation() {
+                try {
+                    const response = await fetch('http://localhost:5000/api/confusion-matrix');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.displayConfusionMatrix(data.image_base64);
+                        this.displayMetrics(data.metrics);
+                    } else {
+                        throw new Error(data.error || 'Failed to load model evaluation');
+                    }
+
+                } catch (error) {
+                    console.error('Error loading model evaluation:', error);
+                    this.showError('Failed to load model evaluation');
+                }
+            }
+
+            displayConfusionMatrix(imageBase64) {
+                const confusionMatrix = document.getElementById('confusionMatrix');
+                confusionMatrix.innerHTML = `
+                    <img src="data:image/png;base64,${imageBase64}" alt="Confusion Matrix">
+                `;
+            }
+
+            displayMetrics(metrics) {
+                const metricsTable = document.getElementById('metricsTable');
+                
+                let tableHTML = `
+                    <h4 style="margin-bottom: 16px; color: var(--text-primary);">Classification Metrics</h4>
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>F1-Score</th>
+                                <th>Support</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                Object.entries(metrics).forEach(([className, classMetrics]) => {
+                    tableHTML += `
+                        <tr>
+                            <td><strong>${className}</strong></td>
+                            <td>${classMetrics.precision}</td>
+                            <td>${classMetrics.recall}</td>
+                            <td>${classMetrics.f1_score}</td>
+                            <td>${classMetrics.support}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += '</tbody></table>';
+                metricsTable.innerHTML = tableHTML;
+            }
+
+            showError(message) {
+                console.error(message);
+            }
+        }
+
+        // Global functions
+        function addPrescription(patientId) {
+            const form = document.getElementById(`prescriptionForm${patientId}`);
+            form.classList.add('show');
+        }
+
+        function editPrescription(patientId) {
+            const form = document.getElementById(`prescriptionForm${patientId}`);
+            form.classList.add('show');
+        }
+
+        function cancelPrescription(patientId) {
+            const form = document.getElementById(`prescriptionForm${patientId}`);
+            form.classList.remove('show');
+        }
+
+        async function savePrescription(patientId) {
+            const textarea = document.getElementById(`prescriptionText${patientId}`);
+            const prescription = textarea.value.trim();
+            
+            if (!prescription) {
+                alert('Please enter prescription details');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('doctorToken');
+                const response = await fetch(`http://localhost:5000/api/doctor/prescription/${patientId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ prescription })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    cancelPrescription(patientId);
+                    refreshPatients();
+                } else {
+                    throw new Error(data.error || 'Failed to save prescription');
+                }
+
+            } catch (error) {
+                console.error('Error saving prescription:', error);
+                alert(`Failed to save prescription: ${error.message}`);
+            }
+        }
+
+        function toggleEvaluation() {
+            const content = document.getElementById('evaluationContent');
+            const toggleBtn = document.getElementById('toggleEvaluation');
+            const icon = toggleBtn.querySelector('i');
+            
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                icon.className = 'fas fa-chevron-down';
+            } else {
+                content.classList.add('show');
+                icon.className = 'fas fa-chevron-up';
+            }
+        }
+
+        function refreshPatients() {
+            if (window.dashboardManager) {
+                window.dashboardManager.loadPatients();
+            }
+        }
+
+        function refreshData() {
+            refreshPatients();
+            if (window.dashboardManager) {
+                window.dashboardManager.loadModelEvaluation();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('doctorToken');
+            localStorage.removeItem('doctorUsername');
+            window.location.href = 'doctor_login.html';
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.themeManager = new ThemeManager();
+            window.dashboardManager = new DashboardManager();
+        });
+    </script>
+</body>
+</html>

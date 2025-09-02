@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Prescription - AI Diagnosis Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .theme-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .light-icon, .dark-icon {
+            color: #667eea;
+        }
+        
+        /* Main Container */
+        .prescription-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .prescription-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .prescription-header {
+            margin-bottom: 32px;
+        }
+        
+        .prescription-icon {
+            width: 80px;
+            height: 80px;
+            background: #667eea;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            margin: 0 auto 20px;
+        }
+        
+        .prescription-title {
+            color: #1f2937;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .prescription-subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+        
+        /* Form Styles */
+        .prescription-form {
+            text-align: left;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            color: #1f2937;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .search-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            font-family: inherit;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover {
+            color: #667eea;
+        }
+        
+        /* Result Sections */
+        .prescription-result {
+            display: none;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+            text-align: left;
+        }
+        
+        .prescription-result.show {
+            display: block;
+        }
+        
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .result-icon {
+            width: 40px;
+            height: 40px;
+            background: #10b981;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        .result-title {
+            color: #1f2937;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .prescription-content {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .prescription-text {
+            color: #1f2937;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        .prescription-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .no-prescription {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+        
+        .no-prescription i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Dark theme */
+        [data-theme="dark"] {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+        
+        [data-theme="dark"] .prescription-card {
+            background: #1f2937;
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .prescription-title {
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .prescription-subtitle {
+            color: #d1d5db;
+        }
+        
+        [data-theme="dark"] .form-group label {
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .form-group input {
+            background: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .form-group input:focus {
+            border-color: #667eea;
+        }
+        
+        [data-theme="dark"] .prescription-result {
+            background: #374151;
+            border-color: #4b5563;
+        }
+        
+        [data-theme="dark"] .result-title {
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .prescription-content {
+            background: #4b5563;
+            border-color: #6b7280;
+        }
+        
+        [data-theme="dark"] .prescription-text {
+            color: #f9fafb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle theme">
+            <i class="fas fa-sun light-icon"></i>
+            <i class="fas fa-moon dark-icon"></i>
+        </button>
+    </div>
+
+    <div class="prescription-container">
+        <div class="prescription-card">
+            <div class="prescription-header">
+                <div class="prescription-icon">
+                    <i class="fas fa-prescription"></i>
+                </div>
+                <h1 class="prescription-title">View Your Prescription</h1>
+                <p class="prescription-subtitle">Enter your Patient ID to access your medical prescription</p>
+            </div>
+
+            <form class="prescription-form" id="prescriptionForm">
+                <div class="form-group">
+                    <label for="patientId">
+                        <i class="fas fa-id-card"></i>
+                        Patient ID
+                    </label>
+                    <input 
+                        type="text" 
+                        id="patientId" 
+                        name="patientId" 
+                        placeholder="Enter your Patient ID (e.g., ABC12345)"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                    <span class="btn-text">View Prescription</span>
+                    <span class="btn-loading" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Searching...
+                    </span>
+                </button>
+
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Patient Portal
+                </a>
+            </form>
+
+            <!-- Prescription Result -->
+            <div class="prescription-result" id="prescriptionResult">
+                <div class="result-header">
+                    <div class="result-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="result-title">Prescription Found</h3>
+                </div>
+                
+                <div class="prescription-content">
+                    <div class="prescription-text" id="prescriptionText"></div>
+                </div>
+                
+                <div class="prescription-meta">
+                    <span>Created: <span id="createdDate"></span></span>
+                    <span>Updated: <span id="updatedDate"></span></span>
+                </div>
+            </div>
+
+            <!-- No Prescription Message -->
+            <div class="prescription-result" id="noPrescriptionResult">
+                <div class="no-prescription">
+                    <i class="fas fa-clock"></i>
+                    <h3>No Prescription Yet</h3>
+                    <p>Your case is still being reviewed by our medical team. Please check back later.</p>
+                    <p><strong>Patient ID:</strong> <span id="displayPatientId"></span></p>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="prescription-result" id="loadingResult">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Searching for your prescription...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Management
+        class ThemeManager {
+            constructor() {
+                this.currentTheme = localStorage.getItem('theme') || 'light';
+                this.init();
+            }
+
+            init() {
+                this.applyTheme();
+                this.setupEventListeners();
+            }
+
+            applyTheme() {
+                document.documentElement.setAttribute('data-theme', this.currentTheme);
+                localStorage.setItem('theme', this.currentTheme);
+                
+                const themeToggle = document.getElementById('themeToggle');
+                if (themeToggle) {
+                    const lightIcon = themeToggle.querySelector('.light-icon');
+                    const darkIcon = themeToggle.querySelector('.dark-icon');
+                    
+                    if (this.currentTheme === 'dark') {
+                        lightIcon.style.display = 'none';
+                        darkIcon.style.display = 'block';
+                    } else {
+                        lightIcon.style.display = 'block';
+                        darkIcon.style.display = 'none';
+                    }
+                }
+            }
+
+            toggleTheme() {
+                this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+                this.applyTheme();
+            }
+
+            setupEventListeners() {
+                const themeToggle = document.getElementById('themeToggle');
+                if (themeToggle) {
+                    themeToggle.addEventListener('click', () => this.toggleTheme());
+                }
+            }
+        }
+
+        // Prescription Manager
+        class PrescriptionManager {
+            constructor() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                const form = document.getElementById('prescriptionForm');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.searchPrescription();
+                    });
+                }
+            }
+
+            async searchPrescription() {
+                const patientId = document.getElementById('patientId').value.trim();
+
+                if (!patientId) {
+                    alert('Please enter your Patient ID');
+                    return;
+                }
+
+                this.showLoading();
+
+                try {
+                    const response = await fetch(`http://localhost:5000/api/patient/prescription/${patientId}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (data.prescription) {
+                            this.showPrescription(data);
+                        } else {
+                            this.showNoPrescription(patientId);
+                        }
+                    } else {
+                        throw new Error(data.error || 'Failed to fetch prescription');
+                    }
+
+                } catch (error) {
+                    console.error('Error searching prescription:', error);
+                    this.showError(`Failed to fetch prescription: ${error.message}`);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            showPrescription(data) {
+                // Hide all result sections
+                this.hideAllResults();
+                
+                // Show prescription result
+                const result = document.getElementById('prescriptionResult');
+                result.classList.add('show');
+                
+                // Set prescription content
+                document.getElementById('prescriptionText').textContent = data.prescription;
+                document.getElementById('createdDate').textContent = new Date(data.created_at).toLocaleDateString();
+                document.getElementById('updatedDate').textContent = new Date(data.updated_at).toLocaleDateString();
+            }
+
+            showNoPrescription(patientId) {
+                // Hide all result sections
+                this.hideAllResults();
+                
+                // Show no prescription result
+                const result = document.getElementById('noPrescriptionResult');
+                result.classList.add('show');
+                
+                // Set patient ID
+                document.getElementById('displayPatientId').textContent = patientId;
+            }
+
+            showLoading() {
+                this.hideAllResults();
+                const loading = document.getElementById('loadingResult');
+                loading.classList.add('show');
+            }
+
+            hideLoading() {
+                const loading = document.getElementById('loadingResult');
+                loading.classList.remove('show');
+            }
+
+            hideAllResults() {
+                const results = [
+                    'prescriptionResult',
+                    'noPrescriptionResult',
+                    'loadingResult'
+                ];
+                
+                results.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.classList.remove('show');
+                    }
+                });
+            }
+
+            showError(message) {
+                alert(message);
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.themeManager = new ThemeManager();
+            window.prescriptionManager = new PrescriptionManager();
+            
+            // Debug: Check if form elements are visible
+            console.log('Form elements check:');
+            console.log('Form:', document.getElementById('prescriptionForm'));
+            console.log('Input:', document.getElementById('patientId'));
+            console.log('Button:', document.getElementById('searchBtn'));
+        });
+    </script>
+</body>
+</html>

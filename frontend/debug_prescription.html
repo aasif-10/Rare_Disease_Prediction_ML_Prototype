@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Prescription - AI Diagnosis Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .debug-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .prescription-form {
+            display: none;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .prescription-form.show {
+            display: block;
+        }
+        
+        .prescription-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            min-height: 100px;
+            resize: vertical;
+            margin-bottom: 12px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>Debug Prescription Functionality</h1>
+        
+        <div class="test-section">
+            <h3>Test 1: Basic Prescription Form</h3>
+            <p>This tests if the prescription form can be shown/hidden:</p>
+            
+            <button class="btn btn-primary" onclick="showForm()">Show Form</button>
+            <button class="btn btn-secondary" onclick="hideForm()">Hide Form</button>
+            
+            <div class="prescription-form" id="testForm">
+                <textarea class="prescription-textarea" placeholder="Enter prescription details..."></textarea>
+                <button class="btn btn-primary">Save</button>
+                <button class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 2: Patient Card Simulation</h3>
+            <p>This simulates the patient card from the doctor dashboard:</p>
+            
+            <div class="patient-card">
+                <div class="patient-header">
+                    <div class="patient-info">
+                        <h3>Patient Case #1</h3>
+                        <span class="patient-id">ID: ABC12345</span>
+                    </div>
+                    <small>2024-01-15</small>
+                </div>
+                
+                <div class="patient-description">
+                    <strong>Patient Description:</strong><br>
+                    Patient reports severe headaches and vision problems.
+                </div>
+                
+                <div class="ai-results">
+                    <h4><i class="fas fa-brain"></i> AI Analysis Results</h4>
+                    <div class="symptoms-list">
+                        <strong>Text Symptoms:</strong><br>
+                        <span class="symptom-tag">Headache</span>
+                        <span class="symptom-tag">Vision problems</span>
+                    </div>
+                </div>
+                
+                <div class="prescription-section">
+                    <h4><i class="fas fa-prescription"></i> Prescription</h4>
+                    
+                    <div style="color: #6b7280; margin-bottom: 16px;">No prescription yet</div>
+                    <button class="btn btn-primary" onclick="addPrescription(1)">
+                        <i class="fas fa-plus"></i> Add Prescription
+                    </button>
+                    
+                    <div class="prescription-form" id="prescriptionForm1">
+                        <textarea 
+                            class="prescription-textarea" 
+                            id="prescriptionText1" 
+                            placeholder="Enter prescription details..."
+                        ></textarea>
+                        <div class="prescription-actions">
+                            <button class="btn btn-primary" onclick="savePrescription(1)">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                            <button class="btn btn-secondary" onclick="cancelPrescription(1)">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 3: CSS Variables Check</h3>
+            <p>Checking if CSS variables are loaded:</p>
+            <div id="cssCheck"></div>
+        </div>
+    </div>
+
+    <script>
+        function showForm() {
+            document.getElementById('testForm').classList.add('show');
+        }
+        
+        function hideForm() {
+            document.getElementById('testForm').classList.remove('show');
+        }
+        
+        function addPrescription(patientId) {
+            const form = document.getElementById(`prescriptionForm${patientId}`);
+            form.classList.add('show');
+        }
+        
+        function cancelPrescription(patientId) {
+            const form = document.getElementById(`prescriptionForm${patientId}`);
+            form.classList.remove('show');
+        }
+        
+        function savePrescription(patientId) {
+            const textarea = document.getElementById(`prescriptionText${patientId}`);
+            const prescription = textarea.value.trim();
+            
+            if (!prescription) {
+                alert('Please enter prescription details');
+                return;
+            }
+            
+            alert(`Prescription saved for patient ${patientId}: ${prescription}`);
+            cancelPrescription(patientId);
+        }
+        
+        // Check CSS variables
+        function checkCSSVariables() {
+            const root = document.documentElement;
+            const computedStyle = getComputedStyle(root);
+            
+            const variables = [
+                '--primary-color',
+                '--bg-primary',
+                '--text-primary',
+                '--border-color'
+            ];
+            
+            let html = '<h4>CSS Variables Status:</h4><ul>';
+            variables.forEach(varName => {
+                const value = computedStyle.getPropertyValue(varName);
+                const status = value ? '✅ Loaded' : '❌ Missing';
+                html += `<li>${varName}: ${status} (${value || 'undefined'})</li>`;
+            });
+            html += '</ul>';
+            
+            document.getElementById('cssCheck').innerHTML = html;
+        }
+        
+        // Run checks when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            checkCSSVariables();
+        });
+    </script>
+</body>
+</html>

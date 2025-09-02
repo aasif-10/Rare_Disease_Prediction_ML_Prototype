@@ -1,4 +1,4 @@
-# Hybrid Disease Predictor
+# AI Diagnosis Platform
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python) 
 
@@ -91,4 +91,5 @@ Accessibility: Can be deployed in clinics, hospitals, and homes globally.
 python scripts/test_hybrid.py
 
 ```
+
 

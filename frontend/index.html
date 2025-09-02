@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rare Disease AI Diagnostic Tool</title>
+    <title>AI Diagnostic Platform</title>
     <style>
         * {
             margin: 0;
@@ -183,12 +183,16 @@
             }
         }
 
-        .results {
-            display: none;
-        }
-
-        .results.show {
-            display: block;
+        .debug-info {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         .symptom-list {
@@ -196,6 +200,7 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
+            min-height: 60px;
         }
 
         .symptom-item {
@@ -240,6 +245,7 @@
             border-radius: 8px;
             margin-bottom: 20px;
             border-left: 4px solid #c62828;
+            display: none;
         }
 
         .success-message {
@@ -249,9 +255,17 @@
             border-radius: 8px;
             margin-bottom: 20px;
             border-left: 4px solid #2e7d2e;
+            display: none;
         }
 
-        @media (max-width: 768px) {
+        .no-results {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media(max-width:768px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
@@ -266,76 +280,72 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏥 Rare Disease AI Diagnostic Tool</h1>
+            <h1>Rare Disease AI Diagnostic Tool</h1>
             <p>Advanced AI-powered analysis for rare disease detection</p>
         </div>
-
         <div class="main-content">
             <div class="input-section">
                 <h2>Patient Information</h2>
+
+                <div id="errorMessage" class="error-message"></div>
+                <div id="successMessage" class="success-message"></div>
 
                 <form id="analysisForm">
                     <div class="form-group">
                         <label for="patientDescription">Patient Description:</label>
                         <textarea id="patientDescription" name="patientDescription"
-                            placeholder="Describe the patient's symptoms, medical history, and concerns... Example: 'I bruise easily and am always tired. My joints are very flexible and my skin stretches unusually far.'"
+                            placeholder="Describe symptoms... Example: 'I bruise easily and am always tired. My joints are very flexible.'"
                             required></textarea>
                     </div>
-
                     <div class="form-group">
                         <label>Medical Image (Optional):</label>
                         <div class="file-upload" id="fileUpload">
                             <input type="file" id="imageFile" name="image" accept="image/*">
                             <div class="file-upload-text">
-                                <span>📷 Click to upload or drag image here</span>
-                                <br>
-                                <small>Supported: JPG, PNG, GIF (Max 16MB)</small>
+                                <span>Click to upload or drag image here</span><br><small>Supported: JPG, PNG, GIF (Max
+                                    16MB)</small>
                             </div>
-                            <img id="previewImage" class="preview-image" style="display: none;">
+                            <img id="previewImage" class="preview-image" style="display:none;">
                         </div>
                     </div>
-
-                    <button type="submit" class="btn" id="analyzeBtn">
-                        🔍 Analyze Patient
-                    </button>
+                    <button type="submit" class="btn" id="analyzeBtn">Analyze Patient</button>
                 </form>
-
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <p>AI is analyzing patient data...</p>
                 </div>
-            </div>
 
+                <!-- Debug info -->
+                <details style="margin-top: 20px;">
+                    <summary>Debug Information</summary>
+                    <div id="debugInfo" class="debug-info">Debug info will appear here...</div>
+                </details>
+            </div>
             <div class="results-section">
                 <h2>Analysis Results</h2>
-
-                <div id="errorMessage" class="error-message" style="display: none;"></div>
-                <div id="successMessage" class="success-message" style="display: none;"></div>
-
-                <div class="results" id="results">
-                    <div id="symptomsSection">
-                        <h3>🔍 Detected Symptoms</h3>
-                        <div class="symptom-list">
-                            <div><strong>Text Symptoms:</strong></div>
-                            <div id="textSymptoms">No symptoms detected yet</div>
-                        </div>
-                        <div class="symptom-list">
-                            <div><strong>Visual Symptoms:</strong></div>
-                            <div id="visualSymptoms">No image analyzed yet</div>
+                <div id="results">
+                    <div>
+                        <h3>Text Symptoms:</h3>
+                        <div class="symptom-list" id="textSymptoms">
+                            <div class="no-results">Enter patient description to see detected symptoms</div>
                         </div>
                     </div>
-
-                    <div id="predictionsSection">
-                        <h3>🏥 Disease Predictions</h3>
+                    <div>
+                        <h3>Visual Symptoms:</h3>
+                        <div class="symptom-list" id="visualSymptoms">
+                            <div class="no-results">Upload image to see visual symptoms</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Disease Predictions:</h3>
                         <div id="predictions">
-                            <p>Submit patient information to see predictions</p>
+                            <div class="no-results">Predictions will appear here after analysis</div>
                         </div>
                     </div>
-
-                    <div id="explanationSection">
-                        <h3>💡 AI Explanation</h3>
-                        <div id="explanation" class="symptom-list">
-                            Analysis explanation will appear here
+                    <div>
+                        <h3>Explanation:</h3>
+                        <div class="symptom-list" id="explanation">
+                            <div class="no-results">AI explanation will appear here</div>
                         </div>
                     </div>
                 </div>
@@ -344,68 +354,63 @@
     </div>
 
     <script>
-        // Global variables
+        const form = document.getElementById('analysisForm');
+        const fileInput = document.getElementById('imageFile');
+        const fileUpload = document.getElementById('fileUpload');
+        const previewImage = document.getElementById('previewImage');
+        const loading = document.getElementById('loading');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const debugInfo = document.getElementById('debugInfo');
         let currentFile = null;
         const API_BASE = 'http://localhost:5000/api';
 
-        // DOM elements
-        const form = document.getElementById('analysisForm');
-        const fileUpload = document.getElementById('fileUpload');
-        const fileInput = document.getElementById('imageFile');
-        const previewImage = document.getElementById('previewImage');
-        const loading = document.getElementById('loading');
-        const results = document.getElementById('results');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-
-        // File upload handling
-        fileUpload.addEventListener('click', () => fileInput.click());
-
-        fileUpload.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            fileUpload.classList.add('drag-over');
-        });
-
-        fileUpload.addEventListener('dragleave', () => {
-            fileUpload.classList.remove('drag-over');
-        });
-
-        fileUpload.addEventListener('drop', (e) => {
-            e.preventDefault();
-            fileUpload.classList.remove('drag-over');
-
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFileSelect(files[0]);
-            }
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFileSelect(e.target.files[0]);
-            }
-        });
-
-        function handleFileSelect(file) {
-            currentFile = file;
-
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                previewImage.src = e.target.result;
-                previewImage.style.display = 'block';
-
-                // Update upload text
-                const uploadText = fileUpload.querySelector('.file-upload-text span');
-                uploadText.textContent = `✅ ${file.name} selected`;
-            };
-            reader.readAsDataURL(file);
+        function addDebugInfo(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.innerHTML += `[${timestamp}] ${message}\n`;
+            debugInfo.scrollTop = debugInfo.scrollHeight;
         }
 
-        // Form submission
-        form.addEventListener('submit', async (e) => {
+        // File upload preview
+        fileUpload.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => {
+            if (e.target.files.length > 0) {
+                currentFile = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    previewImage.src = ev.target.result;
+                    previewImage.style.display = 'block';
+
+                    const uploadText = fileUpload.querySelector('.file-upload-text span');
+                    uploadText.textContent = `${currentFile.name} selected`;
+                };
+                reader.readAsDataURL(currentFile);
+                addDebugInfo(`File selected: ${currentFile.name}`);
+            }
+        });
+
+        form.addEventListener('submit', async e => {
             e.preventDefault();
             await analyzePatient();
         });
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            addDebugInfo(`ERROR: ${message}`);
+        }
+
+        function showSuccess(message) {
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            addDebugInfo(`SUCCESS: ${message}`);
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
 
         async function analyzePatient() {
             const patientDescription = document.getElementById('patientDescription').value.trim();
@@ -415,26 +420,34 @@
                 return;
             }
 
-            // Show loading
-            showLoading(true);
+            addDebugInfo('Starting analysis...');
+            loading.style.display = 'block';
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = 'Analyzing...';
             hideMessages();
 
+            const formData = new FormData();
+            formData.append('patient_description', patientDescription);
+            if (currentFile) formData.append('image', currentFile);
+
+            addDebugInfo(`Sending request to: ${API_BASE}/complete-analysis`);
+            addDebugInfo(`Patient description: ${patientDescription}`);
+            addDebugInfo(`Image attached: ${currentFile ? 'Yes' : 'No'}`);
+
             try {
-                // Prepare form data
-                const formData = new FormData();
-                formData.append('patient_description', patientDescription);
-
-                if (currentFile) {
-                    formData.append('image', currentFile);
-                }
-
-                // Call complete analysis API
-                const response = await fetch(`${API_BASE}/complete-analysis`, {
+                const res = await fetch(`${API_BASE}/complete-analysis`, {
                     method: 'POST',
                     body: formData
                 });
 
-                const data = await response.json();
+                addDebugInfo(`Response status: ${res.status}`);
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+
+                const data = await res.json();
+                addDebugInfo(`Response received: ${JSON.stringify(data, null, 2)}`);
 
                 if (data.success) {
                     displayResults(data);
@@ -443,110 +456,108 @@
                     showError(data.error || 'Analysis failed');
                 }
 
-            } catch (error) {
-                console.error('Error:', error);
-                showError('Connection error. Please ensure the backend server is running on port 5000.');
+            } catch (err) {
+                addDebugInfo(`Request failed: ${err.message}`);
+                showError(`Backend error: ${err.message}. Make sure server is running on port 5000.`);
             } finally {
-                showLoading(false);
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Analyze Patient';
             }
         }
 
         function displayResults(data) {
+            addDebugInfo('Displaying results...');
+
             // Display text symptoms
             const textSymptomsDiv = document.getElementById('textSymptoms');
             if (data.text_symptoms && data.text_symptoms.length > 0) {
                 textSymptomsDiv.innerHTML = data.text_symptoms
-                    .map(symptom => `<span class="symptom-item">${symptom}</span>`)
+                    .map(s => `<span class="symptom-item">${s}</span>`)
                     .join('');
+                addDebugInfo(`Text symptoms: ${data.text_symptoms.join(', ')}`);
             } else {
-                textSymptomsDiv.innerHTML = '<em>No text symptoms detected</em>';
+                textSymptomsDiv.innerHTML = '<div class="no-results">No text symptoms detected</div>';
+                addDebugInfo('No text symptoms detected');
             }
 
             // Display visual symptoms
             const visualSymptomsDiv = document.getElementById('visualSymptoms');
             if (data.visual_symptoms && data.visual_symptoms.length > 0) {
                 visualSymptomsDiv.innerHTML = data.visual_symptoms
-                    .map(symptom => `<span class="symptom-item">${symptom}</span>`)
+                    .map(s => `<span class="symptom-item">${s}</span>`)
                     .join('');
+                addDebugInfo(`Visual symptoms: ${data.visual_symptoms.join(', ')}`);
             } else {
-                visualSymptomsDiv.innerHTML = '<em>No visual symptoms detected</em>';
+                visualSymptomsDiv.innerHTML = '<div class="no-results">No visual symptoms detected</div>';
+                addDebugInfo('No visual symptoms detected');
             }
 
             // Display predictions
             const predictionsDiv = document.getElementById('predictions');
             if (data.predictions && data.predictions.length > 0) {
+                addDebugInfo(`Processing ${data.predictions.length} predictions`);
+
                 predictionsDiv.innerHTML = data.predictions
-                    .map((pred, index) => `
-                        <div class="prediction-item">
-                            <h3>${index + 1}. ${pred.disease}</h3>
-                            <div class="prediction-confidence">${pred.confidence}</div>
-                            <div class="prediction-details">
-                                ${pred.matching_symptoms}/${pred.total_disease_symptoms} symptoms match
+                    .map((p, i) => {
+                        // Handle both decimal and percentage formats
+                        let confidenceDisplay;
+                        if (typeof p.confidence === 'string') {
+                            confidenceDisplay = p.confidence;
+                        } else if (typeof p.confidence === 'number') {
+                            // If it's already a percentage (>1), display as is
+                            // If it's a decimal (<=1), convert to percentage
+                            confidenceDisplay = p.confidence > 1 ?
+                                `${p.confidence.toFixed(1)}%` :
+                                `${(p.confidence * 100).toFixed(1)}%`;
+                        } else {
+                            confidenceDisplay = 'N/A';
+                        }
+
+                        return `
+                            <div class="prediction-item">
+                                <h3>${i + 1}. ${p.disease}</h3>
+                                <div class="prediction-confidence">Confidence: ${confidenceDisplay}</div>
+                                <div class="prediction-details">
+                                    ${p.matching_symptoms || 'N/A'}/${p.total_disease_symptoms || 'N/A'} symptoms match
+                                </div>
                             </div>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
+
+                addDebugInfo(`Predictions displayed: ${data.predictions.map(p => `${p.disease} (${p.confidence})`).join(', ')}`);
             } else {
-                predictionsDiv.innerHTML = '<em>No clear predictions available</em>';
+                predictionsDiv.innerHTML = '<div class="no-results">No predictions available</div>';
+                addDebugInfo('No predictions available');
             }
 
             // Display explanation
             const explanationDiv = document.getElementById('explanation');
             if (data.explanation && data.explanation.explanation) {
-                explanationDiv.innerHTML = `
-                    <p><strong>Top Prediction Explanation:</strong></p>
-                    <p>${data.explanation.explanation}</p>
-                    ${data.explanation.matching_symptoms ?
-                        `<p><strong>Key matching symptoms:</strong> ${data.explanation.matching_symptoms.join(', ')}</p>`
-                        : ''}
-                `;
+                explanationDiv.innerHTML = `<p>${data.explanation.explanation}</p>`;
+                addDebugInfo(`Explanation: ${data.explanation.explanation}`);
             } else {
-                explanationDiv.innerHTML = '<em>No explanation available</em>';
+                explanationDiv.innerHTML = '<div class="no-results">No explanation available</div>';
+                addDebugInfo('No explanation available');
             }
-
-            // Show results
-            results.classList.add('show');
-        }
-
-        function showLoading(show) {
-            loading.classList.toggle('show', show);
-            analyzeBtn.disabled = show;
-
-            if (show) {
-                analyzeBtn.textContent = '🔄 Analyzing...';
-                results.classList.remove('show');
-            } else {
-                analyzeBtn.textContent = '🔍 Analyze Patient';
-            }
-        }
-
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-        }
-
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-        }
-
-        function hideMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
         }
 
         // Test backend connection on page load
         window.addEventListener('load', async () => {
+            addDebugInfo('Page loaded, testing backend connection...');
             try {
                 const response = await fetch(`${API_BASE}/health`);
                 const data = await response.json();
 
                 if (data.status === 'healthy') {
-                    console.log('✅ Backend connection successful');
+                    addDebugInfo('Backend connection successful');
+                    showSuccess('Backend connected successfully!');
+                    setTimeout(hideMessages, 3000);
+                } else {
+                    addDebugInfo(`Backend responded but not healthy: ${JSON.stringify(data)}`);
                 }
             } catch (error) {
-                console.warn('⚠️ Backend not connected. Please start the backend server.');
+                addDebugInfo(`Backend connection failed: ${error.message}`);
                 showError('Backend server not connected. Please start the backend on port 5000.');
             }
         });

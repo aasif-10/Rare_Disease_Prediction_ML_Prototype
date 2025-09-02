@@ -3,8 +3,14 @@ import os, joblib, pandas as pd, numpy as np
 from models.disease_model import DiseasePredictor
 
 # Load model + label encoder
-clf = joblib.load("models/trained_disease_model.pkl")
-le = joblib.load("models/label_encoder.pkl")
+import os
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))  # project root
+clf_path = os.path.join(ROOT_DIR, "models", "trained_disease_model.pkl")
+le_path = os.path.join(ROOT_DIR, "models", "label_encoder.pkl")
+
+clf = joblib.load(clf_path)
+le = joblib.load(le_path)
 
 # get trained feature names
 feature_names = None

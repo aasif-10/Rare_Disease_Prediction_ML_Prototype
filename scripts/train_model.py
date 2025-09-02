@@ -7,11 +7,17 @@ from sklearn.metrics import classification_report, accuracy_score
 import joblib  # to save the trained model
 
 # 1️⃣ Load dataset
-data = pd.read_csv('data/rare_diseases_dataset.csv')
+data = pd.read_csv('data/rare_diseases_dataset_train.csv')
+
 
 # 2️⃣ Split features and labels
 X = data.drop('disease', axis=1)  # all symptom columns
 y = data['disease']               # disease column
+import joblib
+# Save feature names used for training so inference uses the exact same order
+feature_names = X.columns.tolist()
+joblib.dump(feature_names, 'models/feature_names.pkl')
+print("Saved feature names (count={}):".format(len(feature_names)))
 
 # 3️⃣ Encode disease labels to numbers
 le = LabelEncoder()
